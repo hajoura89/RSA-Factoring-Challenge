@@ -1,61 +1,47 @@
-#!/usr/bin/python3
-from sys import argv
-import math
-import threading
+#!/usr/bin/env bash
+check_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                num2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                num2=$(echo $a*$num2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                num2=$3
+        fi
 
-def _prime(nbr):
-    """Check if nbr is a number is prime"""
-    i = 3
-    if nbr % 2 == 0:
-        return False
-    while i * i <= nbr:
-        if nbr % i == 0:
-            return False
-        i += 2
-    return True
+        num1=$2
+        num=$(echo "$1" | tr ':' '=')
 
-def _factor(nbr):
-    """Get the factors of a number & prints them out"""
-    if nbr % 2 == 0:
-        i = 2
-        print("{}={}*{}".format(nbr, int(nbr/i), i))
-    else:
-        sq = math.sqrt(nbr)
-        if sq % 1 == 0:
-            print("{}={}*{}".format(nbr, sq, int(nbr/sq)))
-            return
-        sq = int(sq) + 1
-        for i in range(3, sq, +2):
-            if nbr % i == 0:
-                if _prime(i):
-                    print("{}={}*{}".format(nbr, int(nbr/i), i))
-                    return
+        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
+	        if ((result == 1)); then
+		        numcp=$num1
+		        num1=$num2
+		        num2=$numcp
+                fi
 
-def _factor_with_timeout(nbr, timeout):
-    """Factorize a number with a timeout"""
-    timer = threading.Timer(timeout, thread_timeout, [nbr])
-    timer.start()
-    try:
-        _factor(nbr)
-    except Exception as e:
-        print("Error:", e)
-    finally:
-        timer.cancel()
+        echo "$num$num1*$num2"
+}
 
-def thread_timeout(nbr):
-    """Function to handle thread timeout"""
-    print("Timeout for number:", nbr)
+if [ $# -ne 1 ]
+then
+        echo 'Usage: rsa <file>'
+        exit 1
+else
 
-def _factors(filename):
-    """read_file"""
-    with open(filename, encoding="utf-8") as my_file:
-        for i in my_file.readlines():
-            n = int(i)
-            # Run factorization in a separate thread with 5-second timeout
-            thread = threading.Thread(target=_factor_with_timeout, args=(n, 5))
-            thread.start()
-            thread.join()
+        while read i
+        do
 
-if __name__ == "__main__":
-    _factors(argv[1])
+                result=$(factor "$i")
+                check_factor $result
 
+        done < "$1"
+fi

@@ -1,0 +1,69 @@
+#!/usr/bin/python3
+"""
+RSA Laboratories states that: for each RSA number n, there exist prime numbers p and q such that
+n = p × q. The problem is to find these two primes, given only n.
+This task is the same as task 0, except:
+p and q are always prime numbers
+There is only one number in the files
+How far can you go in less than 5 seconds?
+"""
+from sys import argv
+import math
+import threading
+
+def _prime(nbr):
+    """Check if nbr is a number is prime"""
+    i = 3
+    if nbr % 2 == 0:
+        return False
+    while i * i <= nbr:
+        if nbr % i == 0:
+            return False
+        i += 2
+    return True
+
+def _factor(nbr):
+    """Get the factors of a number & prints them out"""
+    if nbr % 2 == 0:
+        i = 2
+        print("{}={}*{}".format(nbr, int(nbr/i), i))
+    else:
+        sq = math.sqrt(nbr)
+        if sq % 1 == 0:
+            print("{}={}*{}".format(nbr, sq, int(nbr/sq)))
+            return
+        sq = int(sq) + 1
+        for i in range(3, sq, +2):
+            if nbr % i == 0:
+                if _prime(i):
+                    print("{}={}*{}".format(nbr, int(nbr/i), i))
+                    return
+
+def _factor_with_timeout(nbr, timeout):
+    """Factorize a number with a timeout"""
+    timer = threading.Timer(timeout, thread_timeout, [nbr])
+    timer.start()
+    try:
+        _factor(nbr)
+    except Exception as e:
+        print("Error:", e)
+    finally:
+        timer.cancel()
+
+def thread_timeout(nbr):
+    """Function to handle thread timeout"""
+    print("Timeout for number:", nbr)
+
+def _factors(filename):
+    """read_file"""
+    with open(filename, encoding="utf-8") as my_file:
+        for i in my_file.readlines():
+            n = int(i)
+            # Run factorization in a separate thread with 5-second timeout
+            thread = threading.Thread(target=_factor_with_timeout, args=(n, 5))
+            thread.start()
+            thread.join()
+
+if __name__ == "__main__":
+    _factors(argv[1])
+
