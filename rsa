@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#Factorize a number stored in a file into a product of two prime number
+#Output format: n=p*q
+_factor()
+{
+	if [ $# -ne 3 ];
+	then
+		inputs=("$@")
+		count=0
+		nbr2=1
+		for i in ${inputs[*]};
+		do
+			if [ $count -gt 1 ];
+			then
+				nbr2=$(echo $i*$nbr2 | bc)
+			fi
+			count=$((count + 1))
+		done
+	else
+		nbr2=$3
+	fi
+
+	nbr1=$2
+	nbr=$(echo "$1" | tr ':' '=')
+
+	output=$(echo "if($nbr2 > $nbr1) 1 else 0" | bc)
+	if ((output == 1)); then
+		tmp=$nbr1
+		nbr1=$nbr2
+		nbr2=$tmp
+	fi
+
+	echo "$nbr$nbr1*$nbr2"
+}
+
+if [ $# -ne 1 ]
+then
+	echo 'Usage: rsa <file>'
+	exit 1
+else
+
+	while read i
+	do
+
+		output=$(factor "$i")
+		_factor $output
+
+	done < "$1"
+fi
+
