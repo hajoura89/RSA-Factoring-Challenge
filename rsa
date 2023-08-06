@@ -1,50 +1,61 @@
-#!/usr/bin/env bash
-#Factorize a number stored in a file into a product of two prime number
-#Output format: n=p*q
-_factor()
-{
-	if [ $# -ne 3 ];
-	then
-		inputs=("$@")
-		count=0
-		nbr2=1
-		for i in ${inputs[*]};
-		do
-			if [ $count -gt 1 ];
-			then
-				nbr2=$(echo $i*$nbr2 | bc)
-			fi
-			count=$((count + 1))
-		done
-	else
-		nbr2=$3
-	fi
+#!/usr/bin/python3
+from sys import argv
+import math
+import threading
 
-	nbr1=$2
-	nbr=$(echo "$1" | tr ':' '=')
+def _prime(nbr):
+    """Check if nbr is a number is prime"""
+    i = 3
+    if nbr % 2 == 0:
+        return False
+    while i * i <= nbr:
+        if nbr % i == 0:
+            return False
+        i += 2
+    return True
 
-	output=$(echo "if($nbr2 > $nbr1) 1 else 0" | bc)
-	if ((output == 1)); then
-		tmp=$nbr1
-		nbr1=$nbr2
-		nbr2=$tmp
-	fi
+def _factor(nbr):
+    """Get the factors of a number & prints them out"""
+    if nbr % 2 == 0:
+        i = 2
+        print("{}={}*{}".format(nbr, int(nbr/i), i))
+    else:
+        sq = math.sqrt(nbr)
+        if sq % 1 == 0:
+            print("{}={}*{}".format(nbr, sq, int(nbr/sq)))
+            return
+        sq = int(sq) + 1
+        for i in range(3, sq, +2):
+            if nbr % i == 0:
+                if _prime(i):
+                    print("{}={}*{}".format(nbr, int(nbr/i), i))
+                    return
 
-	echo "$nbr$nbr1*$nbr2"
-}
+def _factor_with_timeout(nbr, timeout):
+    """Factorize a number with a timeout"""
+    timer = threading.Timer(timeout, thread_timeout, [nbr])
+    timer.start()
+    try:
+        _factor(nbr)
+    except Exception as e:
+        print("Error:", e)
+    finally:
+        timer.cancel()
 
-if [ $# -ne 1 ]
-then
-	echo 'Usage: rsa <file>'
-	exit 1
-else
+def thread_timeout(nbr):
+    """Function to handle thread timeout"""
+    print("Timeout for number:", nbr)
 
-	while read i
-	do
+def _factors(filename):
+    """read_file"""
+    with open(filename, encoding="utf-8") as my_file:
+        for i in my_file.readlines():
+            n = int(i)
+            # Run factorization in a separate thread with 5-second timeout
+            thread = threading.Thread(target=_factor_with_timeout, args=(n, 5))
+            thread.start()
+            thread.join()
 
-		output=$(factor "$i")
-		_factor $output
-
-	done < "$1"
-fi
+if __name__ == "__main__":
+    _factors(argv[1])
 
