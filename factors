@@ -14,42 +14,50 @@ Factorize as many numbers as possible into a product of two smaller numbers.
 ->Your program should run without any dependency: You will not be able to install anything on the machine we will run your program on
 ->Time limit: Your program will be killed after 5 seconds if it hasn’t finish
 ###
-function _factor() {
-    if [ $# -ne 3 ]; then
-        args=("$@")
-        count=0
-        nbr2=1
-        for a in "${args[@]}"; do
-            if [ $count -gt 1 ]; then
-                nbr2=$(echo "$a * $nbr2" | bc)
-            fi
-            count=$((count + 1))
-        done
-    else
-        nbr2=$3
-    fi
+_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                nbr2=1
+                for a in "${args[@]}";
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                nbr2=$(echo $a*$nbr2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                nbr2=$3
+        fi
 
-    nbr1=$2
-    nbr=$(echo "$1" | tr ':' '=')
+        nbr1=$2
+        nbr=$(echo "$1" | tr ':' '=')
 
-    output=$(echo "if ($nbr2 > $nbr1) 1 else 0" | bc)
-    if ((output == 1)); then
-        tmp=$nbr1
-        nbr1=$nbr2
-        nbr2=$tmp
-    fi
+        output=$(echo "if($nbr2 > $nbr1) 1 else 0" | bc)
+	        if ((output == 1)); then
+		        tmp=$nbr1
+		        nbr1=$nbr2
+		        nbr2=$tmp
+                fi
 
-    echo "$nbr$nbr1 * $nbr2"
+        echo "$nbr$nbr1*$nbr2"
 }
 
-if [ $# -ne 1 ]; then
-    echo 'Usage: factors <file>'
-    exit 1
+if [ $# -ne 1 ]
+then
+        echo 'Usage: factors <file>'
+        exit 1
 else
-    while read -r i; do
-        # Run factor command with a 5-second timeout
+
+	while read -r i;
+	do
+        # Run rsa_factor() with a 5-second timeout
         output=$(timeout 5s factor "$i")
         echo "$output" | _factor $output
-        
-    done < "$1"
-fi
+	done < "$1"
+
+
+fi 
