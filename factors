@@ -1,49 +1,63 @@
-#!/usr/bin/python3
-import sys
-import time
-"""Factorize as many numbers as possible into a product of two smaller numbers"""
-def factorize(nbr):
-    """Number as input
-    Args:
-        nbr: input integer
-        Return: 
-    """
-    for i in range(2, int(nbr**0.5)+1):
-        if nbr % i == 0:
-            return (i, nbr//i)
-    return None
+#!/usr/bin/env bash
+<<'###'
+Factorize as many numbers as possible into a product of two smaller numbers.
+->Usage: factors <file>
+->where <file> is a file containing natural numbers to factor.
+->One number per line
+->You can assume that all lines will be valid natural numbers greater than 1
+->You can assume that there will be no empy line, and no space before and after the valid number
+->The file will always end with a new line
+->Output format: n=p*q
+->one factorization per line
+->p and q don’t have to be prime numbers
+->You can work on the numbers of the file in the order of your choice
+->Your program should run without any dependency: You will not be able to install anything on the machine we will run your program on
+->Time limit: Your program will be killed after 5 seconds if it hasn’t finish
+###
+_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                nbr2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                nbr2=$(echo $a*$nbr2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                nbr2=$3
+        fi
 
-if __name__ == "__main__":
-    """Reads the input file"""
+        nbr1=$2
+        nbr=$(echo "$1" | tr ':' '=')
 
-    if len(sys.argv) != 2:
-        print("Usage: factors <file>")
-        exit()
-    input_file = sys.argv[1]
-    try:
-        with open(input_file, 'r') as f:
-            lines = f.readlines()
-    except FileNotFoundError:
-        print("File not found")
-        exit()
+        output=$(echo "if($nbr2 > $nbr1) 1 else 0" | bc)
+	        if ((output == 1)); then
+		        tmp=$nbr1
+		        nbr1=$nbr2
+		        nbr2=$tmp
+                fi
 
-    start_time = time.time()
-    """
-    Iterates through each line, assuming that each line contains
-    a single natural number. For each number, it invokes the 
-    factorize function. If the function returns a tuple of factors,
-    it displays the factorization in the specified format.
-    """
-    for line in lines:
-        nbr = int(line.strip())
-        factors = factorize(nbr)
-        if factors:
-            print(f"{nbr}={factors[1]}*{factors[0]}")
+        echo "$nbr$nbr1*$nbr2"
+}
 
-        """
-        If running time exceeds 5 seconds,
-        the program exits with an error message.
-        """
-        if time.time() - start_time > 5:
-            print("Time limit exceeded")
-            exit()
+if [ $# -ne 1 ]
+then
+        echo 'Usage: factors <file>'
+        exit 1
+else
+
+		while read -r i;
+		do
+        	# Run rsa_factor() with a 5-second timeout
+        	output=$(timeout 5s factor "$i")
+        	echo "$output" | _factor $output
+		done < "$1"
+
+
+fi
