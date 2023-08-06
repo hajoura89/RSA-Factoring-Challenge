@@ -1,34 +1,42 @@
 #!/usr/bin/env bash
-check_factor()
+<<'###'
+RSA Laboratories states that: for each RSA number n, there exist prime numbers p and q such that
+n = p × q. The problem is to find these two primes, given only n.
+This task is the same as task 0, except:
+p and q are always prime numbers
+There is only one number in the files
+How far can you go in less than 5 seconds?
+###
+rsa_factor()
 {
-	if [ $# -ne 3 ];
+        if [ $# -ne 3 ];
         then
-                args=("$@")
+                inputs=("$@")
                 count=0
-                num2=1
-                for a in ${args[*]};
+                nbr2=1
+                for a in ${inputs[*]};
                 do
                         if [ $count -gt 1 ];
                         then
-                                num2=$(echo $a*$num2 | bc)
+                                nbr2=$(echo $a*$nbr2 | bc)
                         fi
                         count=$((count + 1))
                 done
         else
-                num2=$3
+                nbr2=$3
         fi
 
-        num1=$2
-        num=$(echo "$1" | tr ':' '=')
+        nbr1=$2
+        nbr=$(echo "$1" | tr ':' '=')
 
-        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
-	        if ((result == 1)); then
-		        numcp=$num1
-		        num1=$num2
-		        num2=$numcp
+        output=$(echo "if($nbr2 > $nbr1) 1 else 0" | bc)
+                if ((output == 1)); then
+                        tmp=$nbr1
+                        nbr1=$nbr2
+                        nbr2=$tmp
                 fi
 
-        echo "$num$num1*$num2"
+        echo "$nbr$nbr1*$nbr2"
 }
 
 if [ $# -ne 1 ]
@@ -36,12 +44,11 @@ then
         echo 'Usage: rsa <file>'
         exit 1
 else
+	while read -r i;
+	do
+        # Run rsa_factor() with a 5-second timeout
+        output=$(timeout 5s factor "$i")
+        echo "$output" | rsa_factor $output
+	done < "$1"
 
-        while read i
-        do
-
-                result=$(factor "$i")
-                check_factor $result
-
-        done < "$1"
 fi
